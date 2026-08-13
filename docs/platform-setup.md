@@ -33,7 +33,7 @@ Git repository:
 - Vercel Git connection: active
 - Framework preset: Next.js
 
-The waitlist/social-login safety flags and `NEON_AUTH_COOKIE_SECRET` are configured for Production, Preview, and Development. The Neon-managed integration is active and provides branch-specific database URLs for Production and Development; Preview values are created dynamically per deployment. `NEON_AUTH_BASE_URL` is configured for Production and Development. Values remain hidden.
+The waitlist/social-login safety flags and `NEON_AUTH_COOKIE_SECRET` are configured for Production, Preview, and Development. The Neon-managed integration is active and provides branch-specific database URLs for Production and Development; Preview values are created dynamically per deployment. `NEON_AUTH_BASE_URL` is configured for Production and Development. Because the integration did not inject either documented Auth URL into Preview deployments, Preview uses the shared non-production `vercel-dev` Auth endpoint as a Vercel environment fallback. Values remain hidden.
 
 Do not attach `cirqut.org` until the user owns and verifies it.
 
@@ -50,14 +50,15 @@ Provisioned standalone resources:
 
 The unrelated Vercel-managed `ecoguard-postgresql` project was not changed.
 
-The Neon-managed Vercel connection is active for Vercel `Jacob's projects / cirqut` and Neon `Criqut / cirqut / neondb`. It created the persistent `vercel-dev` branch. Preview-branch behavior still needs verification through the first Git preview deployment.
+The Neon-managed Vercel connection is active for Vercel `Jacob's projects / cirqut` and Neon `Criqut / cirqut / neondb`. It created the persistent `vercel-dev` branch. A dedicated Git test branch verified that Vercel creates Preview deployments and Neon creates isolated `preview/<git-branch>` database branches containing the full application schema and branch-local Auth data.
 
 The integration manages or dynamically injects:
 
 - `DATABASE_URL`
 - `DATABASE_URL_UNPOOLED`
-- `NEON_AUTH_BASE_URL` after Managed Better Auth is enabled
-- `VITE_NEON_AUTH_URL` (integration-provided; the Next.js app does not use this public variable)
+- `NEON_AUTH_BASE_URL` for Production and Development
+
+The current integration did not inject `NEON_AUTH_BASE_URL` or `VITE_NEON_AUTH_URL` into Preview deployments. The project-level Preview fallback points to `vercel-dev` Auth while each Preview retains an isolated application database. Public signup and social login remain disabled.
 
 `NEON_AUTH_COOKIE_SECRET` already exists separately in Vercel for Development, Preview, and Production. Never print or commit it. Pull the linked development environment locally with:
 
@@ -91,10 +92,12 @@ The reviewed migration was verified on temporary branch `mcp-migration-2026-08-1
 
 The same reviewed migration was then applied to the persistent `vercel-dev` branch with explicit approval. Validation there confirms the same eight public application tables, twenty-two total public indexes, and three public foreign keys. Local readiness and the Auth session endpoint return `200`; waitlist and contact submissions return `202`. The synthetic validation rows were deleted and verified absent.
 
+The first hosted Git deployment reached Vercel `READY` at `https://cirqut.vercel.app`. Production health, readiness, Auth session routing, waitlist persistence, and contact persistence passed; synthetic production validation rows were deleted and verified absent. Desktop and mobile remote QA passed without console errors, failed assets, or horizontal overflow. A separate Preview deployment reached `READY` with its isolated Neon database and the shared non-production Auth fallback; health reports both services configured, readiness is `ready`, and an unauthenticated session returns `null`.
+
 Next steps:
 
-1. Create a Git preview deployment to verify dynamic database/Auth branch injection.
-2. Test the full approved-user auth session and access-grant flow once an approved beta user exists.
+1. Test the full approved-user auth session and access-grant flow once an approved beta user exists.
+2. Revisit branch-specific Preview Auth if the Neon integration begins injecting `NEON_AUTH_BASE_URL`; remove the shared fallback once verified.
 
 The folder `drizzle-legacy-unapplied-workos/` is an archive only and must never be included in the active migration chain.
 
@@ -103,7 +106,6 @@ The folder `drizzle-legacy-unapplied-workos/` is an archive only and must never 
 - Counsel-approved privacy, terms, entity, jurisdiction, and contact details.
 - Durable abuse/rate limiting for public forms.
 - Operator tooling for waitlist review, deletion requests, grants, and audit review.
-- First preview deployment and dynamic preview database/Auth branching verification.
 - Production SMTP/OAuth configuration and end-to-end auth testing.
 - Payment provider selection and billing; no payments are accepted.
 - The PCB product itself; intentionally out of scope.
