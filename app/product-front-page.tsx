@@ -94,10 +94,6 @@ export function ProductFrontPage() {
             <a className="button button--light button--large" href="#features">Explore features</a>
           </div>
         </div>
-
-        <figure className="hero-image">
-          <img src="/hero-pcb-transparent-v2.png" alt="Abstract monochrome printed circuit board traces" fetchPriority="high" />
-        </figure>
       </section>
 
       <section className="features-section" id="features">

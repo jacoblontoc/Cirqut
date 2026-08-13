@@ -106,15 +106,14 @@ Use the existing `.button` system on the marketing site and the matching sharp t
 - Do not use pill buttons unless the user explicitly changes the design language.
 - Touch targets should remain at least about 42px high.
 
-### Hero artwork
+### Hero composition
 
-The active hero asset is `public/hero-pcb-transparent-v2.png`.
+The active hero is intentionally copy-and-actions only.
 
-- It is a transparent PNG with a centered, device-agnostic black circuit motif.
-- Keep its background transparent; the page gradient belongs in CSS.
-- Do not place the artwork inside a fake device frame.
-- Preserve meaningful alt text.
-- If replacing it, generate or edit non-destructively, validate alpha at all corners, and update the corresponding rendered-page test.
+- Do not restore an illustration, product mockup, device frame, or decorative PCB image without an explicit design request.
+- Keep the quiet page gradient in CSS and preserve the centered, device-agnostic composition.
+- `public/hero-pcb-transparent-v2.png` is a retained inactive iteration, not an active page asset.
+- If imagery is reintroduced later, treat it as a new reviewed design decision and update the corresponding rendered-page test.
 
 ## 5. Technology stack
 
@@ -139,7 +138,7 @@ The explicit Vercel decision replaced the earlier vinext/Cloudflare runtime. Do 
 - `app/product-front-page.tsx` — marketing-page content and lightweight interactions.
 - `app/globals.css` — global tokens, marketing layout, responsive rules, motion, and buttons.
 - `app/layout.tsx` — global metadata, fonts, Open Graph, and X card metadata.
-- `public/hero-pcb-transparent-v2.png` — current transparent hero artwork.
+- `public/hero-pcb-transparent-v2.png` — retained inactive hero-art iteration; not rendered.
 - `public/og-v4.png` — current social-preview image referenced by metadata.
 
 ### Public support surface
@@ -165,7 +164,7 @@ The explicit Vercel decision replaced the earlier vinext/Cloudflare runtime. Do 
 - `db/index.ts` — Neon HTTP/Drizzle client factory.
 - `db/schema.ts` — public intake, user profiles, organizations, memberships, beta access grants, entitlements, and audit events. No PCB-product tables.
 - `drizzle.config.ts` — PostgreSQL migration configuration.
-- `drizzle/0000_foundation.sql` — reviewed foundation migration; it has not been applied to a remote database.
+- `drizzle/0000_foundation.sql` — reviewed foundation migration; validated on a temporary branch and applied with explicit approval to Neon `main` and `vercel-dev`.
 - `drizzle-legacy-unapplied-workos/` — preserved superseded migration artifacts; never apply them.
 
 ### Platform and validation
@@ -177,7 +176,7 @@ The explicit Vercel decision replaced the earlier vinext/Cloudflare runtime. Do 
 - `docs/platform-setup.md` — current external-account status and remaining setup.
 - `.env.example` — required environment names with placeholders only.
 
-Legacy source files under `build/`, `examples/`, `worker/`, and `vite.config.ts` are excluded from the active Next.js build and are retained only because the repository has no baseline commit. Do not edit or revive them without an explicit cleanup or runtime decision. Generated directories such as `.next`, `dist`, `.vinext`, `.wrangler`, `outputs`, and `work` are not source-of-truth code.
+Legacy source files under `build/`, `examples/`, `worker/`, and `vite.config.ts` are excluded from the active Next.js build and public Git history. Do not edit or revive them without an explicit cleanup or runtime decision. Generated directories such as `.next`, `dist`, `.vinext`, `.wrangler`, `outputs`, and `work` are not source-of-truth code.
 
 ## 7. Common commands
 
@@ -198,7 +197,7 @@ Command expectations:
 - `npm run dev` starts the native Next.js development server. The retained local preview normally uses `http://localhost:3001`.
 - `npm run build` is the production validation gate.
 - `npm test` performs a production build and runs the platform contract tests.
-- `npm run lint` must finish with zero errors. Two known optimization warnings may remain: the external font link and the hero `<img>`.
+- `npm run lint` must finish with zero errors. One known optimization warning may remain for the external font link.
 - `npm run db:generate` may change migration metadata; inspect every generated SQL file.
 - `npm run db:migrate` changes a real database and must never run without the intended Neon target, reviewed SQL, and explicit authorization.
 
@@ -277,7 +276,7 @@ Neon Postgres is the system of record.
 - Back up or preserve a branch before destructive schema work.
 - Product authorization must be organization-scoped before product tables are introduced.
 
-Current external state: the `cirqut` Vercel project exists and the repo is linked. The Neon connector still exposes only a Vercel-managed organization, so standalone project creation is blocked. The user must sign in to Neon and create or connect a normal Neon-owned organization; the unrelated `ecoguard-postgresql` project must remain untouched.
+Current external state: the public GitHub repository `jacoblontoc/Cirqut` is connected to the native-Next.js `cirqut` Vercel project. A console-managed Neon organization named `Criqut` exists (note the organization-name spelling differs from the product), with standalone project `cirqut`, default branch `main`, database `neondb`, and Managed Better Auth provisioned. The Neon-managed Vercel integration is active, with production/development database URLs and branch-specific Auth endpoints configured. The reviewed foundation schema is applied to both `main` and the persistent `vercel-dev` branch. Local readiness, Auth session routing, waitlist intake, and contact intake have been validated against `vercel-dev`; synthetic validation rows were removed. The unrelated `ecoguard-postgresql` project must remain untouched.
 
 ## 13. Model and AI boundary
 
@@ -412,9 +411,9 @@ Normal in-scope implementation steps such as editing files, running local builds
 - Managed Better Auth and its official SDK are beta. Pin versions, read release notes before upgrades, and verify the full login/session flow after every upgrade.
 - The Neon Auth package currently emits transitive peer-dependency warnings during install; do not suppress them without confirming an upstream-compatible fix.
 - npm Audit currently reports four moderate advisories through Drizzle Kit's local migration-only esbuild chain. Do not run `npm audit fix --force`; its current suggestion is a breaking Drizzle Kit downgrade. Reassess when Drizzle publishes a compatible fix.
-- Lint may report non-blocking advisories for externally loaded fonts and the hero `<img>`; do not add new lint errors.
+- Lint may report a non-blocking advisory for externally loaded fonts; do not add new lint errors.
 - `tmp/imagegen/hero-pcb-chroma-v2.png` is an intermediate source, not the public asset.
-- Older hero and Open Graph variants remain in `public/`; do not switch references accidentally.
+- Older hero and Open Graph variants remain locally or as retained assets; do not switch references accidentally.
 - The active repository lives at `C:\Users\Jacob L\Documents\GitHub\Cirqut`.
 - `AGENT.MD` is the requested filename. Tools that only auto-discover `AGENTS.md` should be directed to read this file explicitly.
 

@@ -135,6 +135,13 @@
   padding-block: clamp(56px, 8vh, 96px);
 }
 
+.auth-shell.auth-shell--login {
+  width: min(480px, calc(100% - 64px));
+  grid-template-columns: minmax(0, 1fr);
+  justify-content: center;
+  gap: 0;
+}
+
 .auth-context {
   max-width: 640px;
 }
@@ -234,12 +241,17 @@
   font-weight: 600;
 }
 
+.auth-card-heading h1,
 .auth-card-heading h2 {
   margin: 0;
   font-size: clamp(27px, 3vw, 34px);
   font-weight: 620;
   letter-spacing: -0.04em;
   line-height: 1.1;
+}
+
+.auth-card--login .auth-card-heading h1 {
+  font-size: clamp(34px, 5vw, 42px);
 }
 
 .auth-card-heading > span {
@@ -909,6 +921,7 @@
   .auth-header-switch span { display: none; }
   .auth-header-switch a { padding: 9px 13px; }
   .auth-shell { padding-block: 46px 58px; }
+  .auth-shell.auth-shell--login { width: min(100% - 36px, 480px); }
   .auth-context-copy { padding-bottom: 30px; }
   .auth-context h1 { font-size: clamp(40px, 12vw, 54px); }
   .auth-context-description { font-size: 17px; }

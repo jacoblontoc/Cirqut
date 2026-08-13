@@ -58,32 +58,15 @@ export function AuthShell({ socialEnabled }: { socialEnabled: boolean }) {
           <BrandMark context="auth" />
         </Link>
         <div className="auth-header-switch">
-          <span>Private beta access only.</span>
           <Link href="/waitlist">Join the waitlist</Link>
         </div>
       </header>
 
-      <div className="auth-shell">
-        <section className="auth-context" aria-labelledby="auth-context-title">
-          <div className="auth-context-copy">
-            <p className="auth-eyebrow"><i />Account access</p>
-            <h1 id="auth-context-title">Log in to Cirqut.</h1>
-            <p className="auth-context-description">
-              Approved beta users can return to their account here. Public account creation remains closed while the product is being developed.
-            </p>
-          </div>
-          <div className="auth-feature-list">
-            <div className="auth-feature"><span>01</span><div><h2>Email</h2><p>Existing accounts can sign in with email and password.</p></div></div>
-            <div className="auth-feature"><span>02</span><div><h2>Social</h2><p>Google and GitHub will open for approved access.</p></div></div>
-            <div className="auth-feature"><span>03</span><div><h2>Enterprise</h2><p>SSO remains a planned enterprise identity option.</p></div></div>
-          </div>
-        </section>
-
-        <section className="auth-card" aria-labelledby="auth-form-title">
+      <div className="auth-shell auth-shell--login">
+        <section className="auth-card auth-card--login" aria-labelledby="auth-form-title">
           <div className="auth-card-heading">
-            <p>Welcome back</p>
-            <h2 id="auth-form-title">Log in to your account</h2>
-            <span>Use the method connected to your approved account.</span>
+            <h1 id="auth-form-title">Log in</h1>
+            <span>Use the sign-in method connected to your approved account.</span>
           </div>
 
           <div className="auth-provider-grid">
@@ -122,9 +105,6 @@ export function AuthShell({ socialEnabled }: { socialEnabled: boolean }) {
           </form>
 
           <p className="auth-status" aria-live="polite">{status}</p>
-          <p className="auth-prototype-note">
-            Enterprise SSO is reserved in the identity architecture but is not enabled in this beta concept. <Link href="/contact?topic=enterprise-sso">Contact us about SSO.</Link>
-          </p>
         </section>
       </div>
 

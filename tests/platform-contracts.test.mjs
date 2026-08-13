@@ -32,6 +32,7 @@ test("keeps the public site waitlist-first", async () => {
   assert.match(frontPage, /href="\/waitlist"/);
   assert.match(frontPage, /href="\/login"/);
   assert.doesNotMatch(frontPage, /href="\/signup"/);
+  assert.doesNotMatch(frontPage, /hero-image|hero-pcb-transparent/);
   assert.match(signupPage, /redirect\("\/waitlist"\)/);
   assert.match(layout, /applicationName: "Cirqut"/);
   assert.match(layout, /Stack\+Sans\+Headline/);
@@ -49,9 +50,11 @@ test("guards public account creation while preserving approved login", async () 
   assert.match(route, /authPath === "sign-in\/social"/);
   assert.match(policy, /return "waitlist"/);
   assert.match(login, /authClient\.signIn\.email/);
+  assert.match(login, /authClient\.signIn\.social/);
   assert.match(login, /Google/);
   assert.match(login, /GitHub/);
-  assert.match(login, /Enterprise SSO/);
+  assert.match(login, /auth-shell--login/);
+  assert.doesNotMatch(login, /Account access|auth-context|Welcome back/);
 });
 
 test("defines public intake, tenancy, access, entitlement, and audit tables", async () => {
@@ -73,13 +76,12 @@ test("defines public intake, tenancy, access, entitlement, and audit tables", as
   assert.doesNotMatch(schema, /workos/i);
 });
 
-test("includes public APIs, health checks, and device-agnostic artwork", async () => {
+test("includes public APIs, health checks, social artwork, and accessible motion", async () => {
   await Promise.all([
     access(new URL("app/api/waitlist/route.ts", root)),
     access(new URL("app/api/contact/route.ts", root)),
     access(new URL("app/api/health/route.ts", root)),
     access(new URL("app/api/ready/route.ts", root)),
-    access(new URL("public/hero-pcb-transparent-v2.png", root)),
     access(new URL("public/og-v4.png", root)),
   ]);
 
