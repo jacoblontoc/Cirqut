@@ -18,6 +18,10 @@
 /.vinext/
 /out/
 
+# Next.js may generate these duplicate agent-guide shims during development.
+/AGENTS.md
+/CLAUDE.md
+
 # misc
 .DS_Store
 *.pem

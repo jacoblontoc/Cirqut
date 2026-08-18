@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Geist_Mono } from "next/font/google";
+import { AuthGateNavigation } from "./auth-gate-navigation";
 import "./globals.css";
 
 const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"] });
@@ -9,7 +10,7 @@ const description = "Move from an idea to a clear PCB project handoff with guide
 const appUrl = process.env.APP_URL
   ?? (process.env.VERCEL_PROJECT_PRODUCTION_URL
     ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
-    : "http://localhost:3001");
+    : "http://localhost:3000");
 
 export const metadata: Metadata = {
   metadataBase: new URL(appUrl),
@@ -22,7 +23,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en">
+    <html lang="en" data-scroll-behavior="smooth">
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
@@ -31,7 +32,10 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
           rel="stylesheet"
         />
       </head>
-      <body className={geistMono.variable}>{children}</body>
+      <body className={geistMono.variable}>
+        <AuthGateNavigation />
+        {children}
+      </body>
     </html>
   );
 }

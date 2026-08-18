@@ -1,6 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
+import LiquidGrid from "./_components/liquid-grid";
 
 function BrandMark({ small = false }: { small?: boolean }) {
   return (
@@ -39,7 +41,9 @@ const faqs = [
 ];
 
 export function ProductFrontPage() {
+  const heroRef = useRef<HTMLElement>(null);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [headerVisible, setHeaderVisible] = useState(false);
   const [annual, setAnnual] = useState(true);
 
   useEffect(() => {
@@ -64,16 +68,54 @@ export function ProductFrontPage() {
     return () => observer.disconnect();
   }, []);
 
+  useEffect(() => {
+    const hero = heroRef.current;
+    if (!hero) return;
+
+    const updateHeader = () => {
+      const visible = hero.getBoundingClientRect().bottom <= 0;
+      setHeaderVisible(visible);
+      if (!visible) setMenuOpen(false);
+    };
+
+    const frame = window.requestAnimationFrame(updateHeader);
+    window.addEventListener("scroll", updateHeader, { passive: true });
+    window.addEventListener("resize", updateHeader);
+    return () => {
+      window.cancelAnimationFrame(frame);
+      window.removeEventListener("scroll", updateHeader);
+      window.removeEventListener("resize", updateHeader);
+    };
+  }, []);
+
   return (
     <main id="top">
       <div className="announcement">
         <span>Private beta applications are open.</span>
-        <a href="/waitlist">Join the waitlist <b>→</b></a>
+        <Link href="/waitlist">Join the waitlist <b>→</b></Link>
       </div>
 
-      <header className="site-header">
-        <a className="logo-link" href="#top" aria-label="Home"><BrandMark /></a>
-        <button className="menu-button" type="button" aria-label="Toggle navigation" aria-expanded={menuOpen} onClick={() => setMenuOpen(!menuOpen)}><span /><span /></button>
+      <section ref={heroRef} className="hero" aria-labelledby="hero-title">
+        <div className="hero-grid" aria-hidden="true">
+          <LiquidGrid
+            mode="dots"
+            background="rgba(0,0,0,0)"
+            lineColor="rgba(24,26,23,.22)"
+            glowColor="#181a17"
+          />
+        </div>
+        <div className="hero-copy">
+          <h1 id="hero-title">Get your PCB project moving.</h1>
+          <p className="hero-subhead">Turn requirements and research into an editable PCB starting point.</p>
+          <div className="hero-actions">
+            <Link className="button button--dark button--large" href="/login?view=signup">Get Started <span>→</span></Link>
+            <a className="button button--light button--large" href="#how-it-works">See how it works</a>
+          </div>
+        </div>
+      </section>
+
+      <header className={headerVisible ? "site-header site-header--visible" : "site-header"}>
+        <button className="menu-button" type="button" aria-label="Toggle navigation" aria-expanded={menuOpen} onClick={() => setMenuOpen(!menuOpen)}>Menu</button>
         <nav className={menuOpen ? "main-nav main-nav--open" : "main-nav"} aria-label="Primary navigation">
           <a href="#features" onClick={() => setMenuOpen(false)}>Features</a>
           <a href="#how-it-works" onClick={() => setMenuOpen(false)}>How it works</a>
@@ -81,20 +123,10 @@ export function ProductFrontPage() {
           <a href="#faq" onClick={() => setMenuOpen(false)}>FAQ</a>
         </nav>
         <div className="header-actions">
-          <a className="login-link" href="/login">Log in</a>
-          <a className="button button--dark button--small" href="/waitlist">Join waitlist</a>
+          <Link className="header-text-link" href="/login">Log in</Link>
+          <Link className="header-text-link" href="/waitlist">Join waitlist</Link>
         </div>
       </header>
-
-      <section className="hero">
-        <div className="hero-copy">
-          <h1>PCB creation made easy.</h1>
-          <div className="hero-actions">
-            <a className="button button--dark button--large" href="/waitlist">Join waitlist <span>→</span></a>
-            <a className="button button--light button--large" href="#features">Explore features</a>
-          </div>
-        </div>
-      </section>
 
       <section className="features-section" id="features">
         <div className="section-heading" data-reveal>
@@ -134,15 +166,15 @@ export function ProductFrontPage() {
         <div className="billing-toggle" role="group" aria-label="Billing frequency"><button className={!annual ? "active" : ""} onClick={() => setAnnual(false)}>Monthly</button><button className={annual ? "active" : ""} onClick={() => setAnnual(true)}>Annual <span>Save 20%</span></button></div>
         <div className="pricing-grid">
           <article className="price-card" data-reveal>
-            <span className="plan-label">Starter</span><h3>$0</h3><p>For learning the workflow and planning a first project.</p><a className="button button--light button--full" href="/waitlist">Join waitlist</a>
+            <span className="plan-label">Starter</span><h3>$0</h3><p>For learning the workflow and planning a first project.</p><Link className="button button--light button--full" href="/waitlist">Join waitlist</Link>
             <ul><li>1 active project</li><li>Up to 25 source documents</li><li>1 starter schematic export</li><li>Core board documentation</li><li>Community support</li></ul>
           </article>
           <article className="price-card price-card--featured" data-reveal><div className="popular">Most popular</div>
-            <span className="plan-label">Pro</span><h3>${annual ? "32" : "39"}<small>/ month</small></h3><p>For individual engineers building and documenting real projects.</p><a className="button button--dark button--full" href="/waitlist">Join waitlist</a>
+            <span className="plan-label">Pro</span><h3>${annual ? "32" : "39"}<small>/ month</small></h3><p>For individual engineers building and documenting real projects.</p><Link className="button button--dark button--full" href="/waitlist">Join waitlist</Link>
             <ul><li>Unlimited personal projects</li><li>Up to 250 documents per project</li><li>Advanced citation and conflict checks</li><li>Unlimited schematic and document exports</li><li>Faster model processing</li></ul>
           </article>
           <article className="price-card" data-reveal>
-            <span className="plan-label">Team</span><h3>${annual ? "28" : "35"}<small>/ user / month</small></h3><p>For engineering groups that review and maintain boards together.</p><a className="button button--light button--full" href="/waitlist">Join waitlist</a>
+            <span className="plan-label">Team</span><h3>${annual ? "28" : "35"}<small>/ user / month</small></h3><p>For engineering groups that review and maintain boards together.</p><Link className="button button--light button--full" href="/waitlist">Join waitlist</Link>
             <ul><li>Everything in Pro</li><li>Shared projects and review workflows</li><li>Decision ownership and revision history</li><li>Organization controls and usage reporting</li><li>Shared provider and API-key settings</li></ul>
           </article>
         </div>
@@ -161,18 +193,17 @@ export function ProductFrontPage() {
         <BrandMark />
         <h2>Make your next PCB project easier to start and easier to review.</h2>
         <p>Join the private beta for guided setup, source-backed research, editable design files, and a complete project handoff.</p>
-        <div><a className="button button--light button--large" href="/waitlist">Join the waitlist <span>→</span></a><a href="#pricing">Compare plans</a></div>
+        <div><Link className="button button--light button--large" href="/waitlist">Join the waitlist <span>→</span></Link><a href="#pricing">Compare plans</a></div>
       </section>
 
       <footer className="site-footer">
         <div className="footer-main">
           <div className="footer-brand"><a href="#top" aria-label="Home"><BrandMark /></a><span>Private beta · 2026</span></div>
           <div className="footer-column"><h3>Product</h3><a href="#features">Features</a><a href="#how-it-works">How it works</a><a href="#pricing">Pricing</a><a href="#faq">FAQ</a></div>
-          <div className="footer-column"><h3>Company</h3><a href="/waitlist">Private beta</a><a href="/contact">Contact</a><a href="/status">Changelog</a></div>
-          <div className="footer-column"><h3>Resources</h3><a href="#faq">Documentation</a><a href="#how-it-works">Design guide</a><a href="#features">PCB glossary</a><a href="/status">System status</a></div>
-          <div className="footer-column"><h3>Legal</h3><a href="/privacy">Privacy</a><a href="/terms">Terms</a><a href="/security">Security</a><a href="/login">Log in</a></div>
+          <div className="footer-column"><h3>Company</h3><Link href="/waitlist">Private beta</Link><Link href="/contact">Contact</Link><Link href="/status">Status</Link></div>
+          <div className="footer-column"><h3>Legal</h3><Link href="/privacy">Privacy</Link><Link href="/terms">Terms</Link><Link href="/security">Security</Link></div>
         </div>
-        <div className="footer-bottom"><span>© 2026. All rights reserved.</span><div><a href="/contact">Contact</a><a href="/security">Security</a><a href="/status">Status</a></div></div>
+        <div className="footer-bottom"><span>© 2026. All rights reserved.</span><div><Link href="/contact">Contact</Link><Link href="/security">Security</Link><Link href="/status">Status</Link></div></div>
       </footer>
     </main>
   );

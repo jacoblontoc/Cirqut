@@ -1,3 +1,6 @@
+import type { ReactNode } from "react";
+import Link from "next/link";
+
 type BrandMarkProps = {
   context: "auth" | "legal";
 };
@@ -9,6 +12,22 @@ export function BrandMark({ context }: BrandMarkProps) {
       <i />
       <i />
     </span>
+  );
+}
+
+export function AuthGateShell({ children, variant }: { children: ReactNode; variant: "login" | "waitlist" }) {
+  return (
+    <main className={`auth-page auth-gate auth-gate--${variant}`}>
+      <section className="auth-gate__form-pane">
+        <Link className="auth-gate__back" href="/" data-auth-gate-back>
+          <span aria-hidden="true">←</span> Back
+        </Link>
+        <div className="auth-gate__content">{children}</div>
+      </section>
+
+      <span className="auth-gate__bezel" aria-hidden="true" />
+      <aside className="auth-gate__visual-pane" aria-hidden="true" />
+    </main>
   );
 }
 
@@ -102,4 +121,3 @@ export function LegalPage({ documentLabel, title, summary, sections }: LegalPage
     </main>
   );
 }
-import Link from "next/link";

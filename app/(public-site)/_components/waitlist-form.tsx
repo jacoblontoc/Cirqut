@@ -65,7 +65,7 @@ export function WaitlistForm() {
       <label className="auth-honeypot" aria-hidden="true"><span>Website</span><input name="website" type="text" tabIndex={-1} autoComplete="off" /></label>
       <label className="auth-checkbox auth-checkbox-terms"><input name="privacyAccepted" type="checkbox" required /><span>I acknowledge the <Link href="/privacy">Privacy Notice</Link> for this waitlist submission.</span></label>
       <label className="auth-checkbox"><input name="productUpdatesConsent" type="checkbox" /><span>Send me occasional product updates in addition to beta-access emails.</span></label>
-      <button className="auth-submit" type="submit" disabled={state === "submitting" || state === "success"}>{state === "submitting" ? "Joining…" : state === "success" ? "Joined" : "Join the waitlist"}<span aria-hidden="true">→</span></button>
+      <button className="button button--dark button--large button--full auth-submit" type="submit" disabled={state === "submitting" || state === "success"}>{state === "submitting" ? "Joining…" : state === "success" ? "Joined" : "Join the waitlist"}<span aria-hidden="true">→</span></button>
       <p className={`auth-status ${state === "error" ? "auth-status--error" : ""}`} aria-live="polite">{message}</p>
     </form>
   );

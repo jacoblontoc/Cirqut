@@ -8,6 +8,27 @@
       "when": 1786589110637,
       "tag": "0000_foundation",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1787000308806,
+      "tag": "0001_invite-access",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1787014955161,
+      "tag": "0002_foundation",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1787064231059,
+      "tag": "0003_foundation",
+      "breakpoints": true
     }
   ]
 }

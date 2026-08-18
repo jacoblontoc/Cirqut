@@ -1,0 +1,1 @@
+ALTER TABLE "access_grants" ADD COLUMN "referrer_auth_user_id" text;

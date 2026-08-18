@@ -9,7 +9,7 @@ Status: selected for the pre-product foundation. Vercel and the local Next.js pr
 | Layer | Selection | Current boundary |
 | --- | --- | --- |
 | Hosting | Vercel | Native Next.js, server functions, previews, environment variables, and future production deployment. |
-| Authentication | Neon Managed Better Auth | Email/password for approved existing users. Google and GitHub are reserved but disabled while signup is waitlist-only. |
+| Authentication | Neon Managed Better Auth | Verified email/password accounts plus Google and GitHub; application access remains separately invite-gated. |
 | Primary database | Standalone Neon Postgres | Public intake, Cirqut-specific profiles, tenancy, access grants, entitlement placeholders, and audit events. |
 | ORM and migrations | Drizzle ORM / Drizzle Kit | Type-safe runtime queries and reviewed PostgreSQL migrations. |
 | Future enterprise identity | Provider adapter, not selected | Neon does not currently document native enterprise SAML/OIDC SSO. Do not claim or implement it prematurely. |
@@ -37,7 +37,7 @@ The active schema intentionally stops before PCB product data. It includes:
 - `waitlist_entries` and `contact_submissions`;
 - `user_profiles` linked to Managed Better Auth user IDs;
 - `organizations` and `organization_memberships`;
-- `access_grants` as the private-beta authorization gate;
+- `access_grants` as the private-beta authorization gate, with hashed one-time keys and optional referrer attribution for a future reward ledger;
 - `organization_entitlements` as a payment-provider-neutral plan boundary;
 - `audit_events` for security-relevant application events.
 
@@ -55,11 +55,11 @@ Managed Better Auth stores identity and sessions in the database's branch-local 
 
 Current policy:
 
-- `/signup` redirects to `/waitlist`;
-- `AUTH_SIGNUP_MODE=waitlist` blocks proxied email signup and social entry routes;
-- existing approved users may use email/password login after auth is configured;
+- `/signup` redirects to `/login?view=signup`;
+- `AUTH_SIGNUP_MODE=waitlist` remains the safe default, while private-beta Preview may use `open` after the invite gate is ready;
+- email/password accounts require verification, with password reset handled by Managed Better Auth;
 - authentication is not authorization—an active `access_grants` record is required for beta access;
-- Google and GitHub stay disabled until approved-account enforcement is acceptable or public signup opens;
+- Google and GitHub stay disabled until their environment is open and provider credentials are configured;
 - enterprise SSO is a future provider boundary, not a current Neon capability claim.
 
 Managed Better Auth is beta and currently lacks a documented global restricted-signup switch. The application-level gate protects Cirqut access even if an identity record is created outside the UI, but production launch still requires a full abuse and bypass review.

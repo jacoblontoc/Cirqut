@@ -11,7 +11,7 @@ const sections: LegalSection[] = [
     id: "scope",
     title: "Scope and status",
     paragraphs: [
-      "This draft describes the intended privacy practices for the public website, waitlist, contact intake, approved-account sign-in, and the future hosted PCB-creation service. The product workspace itself has not been implemented.",
+      "This draft describes the intended privacy practices for the public website, account creation and verification, private-beta invite access, optional launch updates, waitlist and contact intake, and the future hosted PCB-creation service. The product workspace itself has not been implemented.",
       "Before launch, this notice should be updated with the legal entity responsible for the service, its contact details, the jurisdictions in which it operates, and the final list of infrastructure and model providers.",
     ],
   },
@@ -22,7 +22,7 @@ const sections: LegalSection[] = [
       "When production services are enabled, information may be collected directly from users, automatically from their devices, and from integrations a workspace administrator chooses to connect.",
     ],
     bullets: [
-      "Account information such as name, work email, organization, role, authentication identifiers, and workspace membership.",
+      "Account information such as name, work email, organization, role, PCB experience, tools used, hoped-for use cases, authentication identifiers, and workspace membership.",
       "Waitlist and contact information such as email, name, organization, role, project context, communication preferences, and inquiry history.",
       "Workspace content such as requirements, datasheets, errata, app notes, reference designs, notes, decisions, citations, review comments, schematic files, and generated documentation.",
       "Configuration information such as integration settings, model preferences, and whether a workspace uses its own API credentials.",

@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
 
 export default function SignupPage() {
-  redirect("/waitlist");
+  redirect("/login?view=signup");
 }

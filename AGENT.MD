@@ -2,6 +2,14 @@
 
 This file is the repository-specific operating guide for coding agents. Read it before changing the project. Prefer the instructions here over generic assumptions about the product, stack, or visual direction.
 
+## Canonical agent instructions
+
+`AGENT.MD` is the only maintained agent guide for this repository. Do not add or commit parallel instruction files such as `AGENTS.md` or `CLAUDE.md`.
+
+Next.js 16 may generate `AGENTS.md` and `CLAUDE.md` when `next dev` detects an AI coding agent. Those files are ignored generated shims, not project documentation. If they appear locally, leave them untracked or remove them after the development process stops; do not copy project guidance into them.
+
+Next.js 16 contains breaking APIs, conventions, and file-structure changes that may differ from model training data. Before framework-level work, read the relevant local documentation under `node_modules/next/dist/docs/` and follow current deprecation notices.
+
 ## 1. Project purpose
 
 Cirqut is currently a public-facing website and technical foundation for a future PCB-creation assistant. The intended product makes the early PCB workflow easier for beginners and experienced electrical engineers by helping them:
@@ -22,7 +30,8 @@ The repository currently contains:
 
 - the marketing front page;
 - pricing, FAQ, waitlist, contact, status, security, privacy, and terms pages;
-- approved-account login and a waitlist-first public signup redirect;
+- verified email/password and social account flows with a separate private-beta invite gate;
+- email-bound, one-time beta keys with optional future referrer attribution;
 - Neon Managed Better Auth proxy routes and a private-beta access gate;
 - a Neon Postgres/Drizzle schema for public intake, identity profiles, tenancy, entitlements, and audit events;
 - native Next.js/Vercel output, build validation, lint, and platform contract tests.
@@ -108,12 +117,14 @@ Use the existing `.button` system on the marketing site and the matching sharp t
 
 ### Hero composition
 
-The active hero is intentionally copy-and-actions only.
+The active hero fills the initial viewport beneath the private-beta announcement with a centered headline, primary actions, and the approved soldering artwork along the bottom edge. The navigation follows the hero, keeping it out of the opening view while preserving the announcement.
 
-- Do not restore an illustration, product mockup, device frame, or decorative PCB image without an explicit design request.
-- Keep the quiet page gradient in CSS and preserve the centered, device-agnostic composition.
+- Keep `public/hero-pcb-soldering-edge-v3.png` decorative, responsive, and behind the hero copy.
+- Keep the quiet page gradient in CSS and preserve the centered composition.
+- Keep the announcement linked to `/waitlist`; the hero's `Get Started` action opens `/login?view=signup`.
+- Do not add a capability rail or feature list beneath the hero copy without a reviewed design request.
 - `public/hero-pcb-transparent-v2.png` is a retained inactive iteration, not an active page asset.
-- If imagery is reintroduced later, treat it as a new reviewed design decision and update the corresponding rendered-page test.
+- Do not replace or add hero imagery without an explicit design request; update the corresponding rendered-page test when the approved asset changes.
 
 ## 5. Technology stack
 
@@ -138,6 +149,7 @@ The explicit Vercel decision replaced the earlier vinext/Cloudflare runtime. Do 
 - `app/product-front-page.tsx` — marketing-page content and lightweight interactions.
 - `app/globals.css` — global tokens, marketing layout, responsive rules, motion, and buttons.
 - `app/layout.tsx` — global metadata, fonts, Open Graph, and X card metadata.
+- `public/hero-pcb-soldering-edge-v3.png` — active transparent decorative hero artwork.
 - `public/hero-pcb-transparent-v2.png` — retained inactive hero-art iteration; not rendered.
 - `public/og-v4.png` — current social-preview image referenced by metadata.
 
@@ -145,11 +157,12 @@ The explicit Vercel decision replaced the earlier vinext/Cloudflare runtime. Do 
 
 - `app/(public-site)/layout.tsx` — shared route-group wrapper.
 - `app/(public-site)/public-shells.css` — auth, legal, contact, and support-page styles.
-- `app/(public-site)/_components/auth-shell.tsx` — approved-account login for email and gated social providers.
+- `app/(public-site)/_components/auth-shell.tsx` — email/password, verification, reset, Google, and GitHub account views; signup first offers Email, Google, or GitHub and reveals the email fields in place.
+- `app/(public-site)/_components/beta-access-forms.tsx` — verified-session invite redemption, update preference, and sign-out controls.
 - `app/(public-site)/_components/waitlist-form.tsx` — public private-beta application form.
 - `app/(public-site)/_components/public-shells.tsx` — shared legal shell and symbol mark.
-- `app/(public-site)/login`, `waitlist`, `contact`, `account`, `privacy`, `terms`, `security`, and `status` — public/account pages.
-- `app/(public-site)/signup/page.tsx` — compatibility redirect to `/waitlist`; public account creation is closed.
+- `app/(public-site)/login`, `waitlist`, `contact`, `account`, `privacy`, `terms`, `security`, and `status` — public/support pages; `/waitlist` is session-aware and `/account` is a compatibility redirect.
+- `app/(public-site)/signup/page.tsx` — compatibility redirect to the create-account view at `/login?view=signup`.
 
 ### Authentication
 
@@ -157,7 +170,7 @@ The explicit Vercel decision replaced the earlier vinext/Cloudflare runtime. Do 
 - `lib/auth/server.ts` — lazy server-side Neon Auth instance and environment checks.
 - `lib/auth/client.ts` — browser auth client through the same-origin proxy.
 - `lib/auth/policy.ts` — `waitlist`, `invite`, and `open` signup-policy boundary.
-- `proxy.ts` — protects account routes server-side.
+- `app/(public-site)/waitlist/actions.ts` — verified-session beta invite and communication-preference mutations.
 
 ### Database
 
@@ -165,6 +178,10 @@ The explicit Vercel decision replaced the earlier vinext/Cloudflare runtime. Do 
 - `db/schema.ts` — public intake, user profiles, organizations, memberships, beta access grants, entitlements, and audit events. No PCB-product tables.
 - `drizzle.config.ts` — PostgreSQL migration configuration.
 - `drizzle/0000_foundation.sql` — reviewed foundation migration; validated on a temporary branch and applied with explicit approval to Neon `main` and `vercel-dev`.
+- `drizzle/0001_invite-access.sql` and `drizzle/0002_foundation.sql` — additive invite-key and referrer-attribution migrations; applied to `vercel-dev` only.
+- `drizzle/0003_foundation.sql` — additive private-beta onboarding profile fields; generated and reviewed locally, not applied remotely.
+- `lib/invite-keys.ts` — cryptographically secure key generation, validation, and SHA-256 hashing.
+- `scripts/create-invite.ts` — operator-only, email-bound key issuance; prints plaintext once and stores only its hash.
 - `drizzle-legacy-unapplied-workos/` — preserved superseded migration artifacts; never apply them.
 
 ### Platform and validation
@@ -190,16 +207,18 @@ npm test
 npm run lint
 npm run db:generate
 npm run db:migrate
+node scripts/create-invite.ts --email person@example.com --days 14
 ```
 
 Command expectations:
 
-- `npm run dev` starts the native Next.js development server. The retained local preview normally uses `http://localhost:3001`.
+- `npm run dev` starts the native Next.js development server. Use the exact Local URL it prints; the default is normally `http://localhost:3000`.
 - `npm run build` is the production validation gate.
 - `npm test` performs a production build and runs the platform contract tests.
 - `npm run lint` must finish with zero errors. One known optimization warning may remain for the external font link.
 - `npm run db:generate` may change migration metadata; inspect every generated SQL file.
 - `npm run db:migrate` changes a real database and must never run without the intended Neon target, reviewed SQL, and explicit authorization.
+- `node scripts/create-invite.ts` changes the selected database. Confirm the exact non-production target and recipient first; never log, commit, or reprint a generated key.
 
 Preserve `package-lock.json` and use npm unless the user explicitly changes package managers.
 
@@ -210,7 +229,7 @@ Preserve `package-lock.json` and use npm unless the user explicitly changes pack
 - Do not scan arbitrary ports. Use the configured/local URL or inspect the exact known listener.
 - Keep server logs project-local or in an explicitly chosen temporary log file.
 - After a move, verify that HMR and builds use the new directory rather than a still-running process rooted in the old path.
-- A successful health check should include `/`, `/waitlist`, `/login`, `/contact`, `/privacy`, `/terms`, and `/api/health`. `/signup` should redirect to `/waitlist`.
+- A successful health check should include `/`, `/waitlist`, `/login`, `/contact`, `/privacy`, `/terms`, and `/api/health`. `/signup` should redirect to `/login?view=signup`, and `/account` should redirect to `/waitlist`.
 
 ## 9. Component and TypeScript conventions
 
@@ -245,12 +264,15 @@ Neon Managed Better Auth is the selected identity service. It is beta and stores
 - Managed Better Auth is the source of truth for authentication identity and sessions.
 - Application tables own Cirqut-specific profiles, organizations, roles, beta access, entitlements, and audit records.
 - Authentication never implies product access. Require an active `access_grants` record while the private beta is gated.
-- `AUTH_SIGNUP_MODE` defaults to `waitlist`. Do not expose email signup or social OAuth until restricted account creation is enforceable.
+- `AUTH_SIGNUP_MODE` defaults to `waitlist`. Use `open` only where the verified-session application invite gate is ready and intentionally being tested.
 - Google and GitHub UI is present but disabled unless both public signup and the explicit social flag are enabled.
-- Email/password login is for pre-created or approved existing accounts. Leave room for email signup later; do not build a password store.
+- Email/password signup requires verification; Cirqut never stores passwords. Authentication alone never bypasses the application invite gate.
+- Signup switches locally between provider choices and the email form. Do not add a second route or replay the sidebar entrance animation for that switch.
+- Beta keys are email-bound, one-use, and stored only as SHA-256 hashes. Redemption requires a verified session whose normalized email matches the grant, then authorizes by Auth user ID and records an audit event.
+- `referrer_auth_user_id` preserves future reward attribution. Do not add balances, points, payouts, or multi-use referral codes until explicitly requested.
 - Neon does not currently document native enterprise SAML/OIDC SSO. Preserve a future provider adapter boundary and never claim SSO is live.
-- Protect future private routes server-side through `proxy.ts` and application authorization; hiding client UI is not authorization.
-- If auth environment values are missing, APIs return `503` and account routes redirect safely to login.
+- Protect future private routes at their data-access boundaries; hiding client UI is not authorization.
+- If auth environment values are missing, auth APIs return `503` and `/waitlist` remains safely available as the anonymous application form.
 
 Required values:
 
@@ -259,7 +281,7 @@ Required values:
 - `AUTH_SIGNUP_MODE` — `waitlist`, `invite`, or `open`; default `waitlist`
 - `NEXT_PUBLIC_AUTH_SOCIAL_ENABLED` — default `false`
 
-Before production auth, configure trusted domains, custom SMTP, production Google/GitHub OAuth apps, email verification, and disable production localhost access. See `docs/platform-setup.md`.
+Before production auth, validate trusted domains, production Google/GitHub OAuth apps, email verification, and disable production localhost access. Zoho/custom-SMTP work is deliberately deferred; do not resume it unless the user explicitly asks. See `docs/platform-setup.md`.
 
 ## 12. Database architecture
 
@@ -276,7 +298,7 @@ Neon Postgres is the system of record.
 - Back up or preserve a branch before destructive schema work.
 - Product authorization must be organization-scoped before product tables are introduced.
 
-Current external state: the public GitHub repository `jacoblontoc/Cirqut` is connected to the native-Next.js `cirqut` Vercel project. A console-managed Neon organization named `Criqut` exists (note the organization-name spelling differs from the product), with standalone project `cirqut`, default branch `main`, database `neondb`, and Managed Better Auth provisioned. The Neon-managed Vercel integration is active, with production/development database URLs and branch-specific Auth endpoints configured. The reviewed foundation schema is applied to both `main` and the persistent `vercel-dev` branch. Local readiness, Auth session routing, waitlist intake, and contact intake have been validated against `vercel-dev`; synthetic validation rows were removed. Git preview deployments receive isolated Neon database branches; because the integration did not inject `NEON_AUTH_BASE_URL`, Preview uses the shared non-production `vercel-dev` Auth endpoint as a Vercel environment fallback. The unrelated `ecoguard-postgresql` project must remain untouched.
+Current external state: the public GitHub repository `jacoblontoc/Cirqut` is connected to the native-Next.js `cirqut` Vercel project, where `cirqut.org` and `www.cirqut.org` are verified. Neon project `cirqut` is `jolly-river-00297237`; `vercel-dev` is `br-green-art-af19lvhm`, and `main` is `br-polished-sunset-afkm35lq`. The reviewed foundation schema is on both branches, while invite migrations `0001` and `0002` are verified only on `vercel-dev`; onboarding migration `0003` is local-only, and `main` remains unchanged. Managed Better Auth is provisioned, and Preview uses the shared non-production `vercel-dev` Auth endpoint as a fallback while application databases remain branch-isolated. The unrelated `ecoguard-postgresql` project must remain untouched.
 
 ## 13. Model and AI boundary
 
@@ -415,7 +437,7 @@ Normal in-scope implementation steps such as editing files, running local builds
 - `tmp/imagegen/hero-pcb-chroma-v2.png` is an intermediate source, not the public asset.
 - Older hero and Open Graph variants remain locally or as retained assets; do not switch references accidentally.
 - The active repository lives at `C:\Users\Jacob L\Documents\GitHub\Cirqut`.
-- `AGENT.MD` is the requested filename. Tools that only auto-discover `AGENTS.md` should be directed to read this file explicitly.
+- `AGENT.MD` is the canonical requested filename. Direct tools that expect `AGENTS.md` or `CLAUDE.md` to this file instead of restoring those generated shims.
 
 ## 22. Definition of done
 

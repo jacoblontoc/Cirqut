@@ -47,6 +47,11 @@ export const userProfiles = pgTable("user_profiles", {
   authUserId: text("auth_user_id").notNull(),
   email: text("email").notNull(),
   displayName: text("display_name"),
+  persona: text("persona"),
+  pcbExperience: text("pcb_experience"),
+  pcbTools: jsonb("pcb_tools").$type<string[]>(),
+  cirqutGoals: jsonb("cirqut_goals").$type<string[]>(),
+  onboardingCompletedAt: timestamp("onboarding_completed_at", { withTimezone: true }),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
 }, (table) => [
@@ -102,13 +107,16 @@ export const waitlistEntries = pgTable("waitlist_entries", {
 ]);
 
 // Access grants are an application-level beta gate. Authentication alone does
-// not grant access while public account creation is closed.
+// not grant access while the private beta is gated.
 export const accessGrants = pgTable("access_grants", {
   id: uuid("id").defaultRandom().primaryKey(),
   email: text("email").notNull(),
   authUserId: text("auth_user_id"),
+  inviteKeyHash: text("invite_key_hash"),
   status: accessGrantStatus("status").notNull().default("pending"),
   grantedByAuthUserId: text("granted_by_auth_user_id"),
+  // Optional referral attribution. Reward accounting belongs in a future ledger.
+  referrerAuthUserId: text("referrer_auth_user_id"),
   invitedAt: timestamp("invited_at", { withTimezone: true }),
   acceptedAt: timestamp("accepted_at", { withTimezone: true }),
   expiresAt: timestamp("expires_at", { withTimezone: true }),
@@ -117,6 +125,7 @@ export const accessGrants = pgTable("access_grants", {
 }, (table) => [
   uniqueIndex("access_grants_email_unique").on(table.email),
   uniqueIndex("access_grants_auth_user_id_unique").on(table.authUserId),
+  uniqueIndex("access_grants_invite_key_hash_unique").on(table.inviteKeyHash),
   index("access_grants_status_idx").on(table.status),
 ]);
 

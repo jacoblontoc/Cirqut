@@ -12,7 +12,8 @@
     "test": "npm run build && node --test tests/*.test.mjs",
     "lint": "eslint . --ignore-pattern dist --ignore-pattern .next",
     "db:generate": "drizzle-kit generate --name foundation",
-    "db:migrate": "drizzle-kit migrate"
+    "db:migrate": "drizzle-kit migrate",
+    "invite:create": "node scripts/create-invite.ts"
   },
   "dependencies": {
     "@neondatabase/auth": "^0.5.0-beta",

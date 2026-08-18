@@ -1,7 +1,7 @@
 import type { NextRequest } from "next/server";
 
 import { getAuth, isAuthConfigured } from "@/lib/auth/server";
-import { isPublicSignUpOpen } from "@/lib/auth/policy";
+import { isPublicSignUpOpen, isSocialAuthEnabled } from "@/lib/auth/policy";
 
 type AuthRouteContext = {
   params: Promise<{ path: string[] }>;
@@ -17,6 +17,13 @@ function unavailable() {
 function privateBetaOnly() {
   return Response.json(
     { error: "Public account creation is closed. Join the waitlist for access." },
+    { status: 403, headers: { "Cache-Control": "no-store" } },
+  );
+}
+
+function socialUnavailable() {
+  return Response.json(
+    { error: "Social authentication is not available in this environment." },
     { status: 403, headers: { "Cache-Control": "no-store" } },
   );
 }
@@ -37,13 +44,12 @@ export async function POST(request: NextRequest, context: AuthRouteContext) {
   const { path } = await context.params;
   const authPath = path.join("/");
 
-  // Managed Better Auth does not yet provide a global invite-only switch.
-  // Block every public sign-up and social entry point until the beta is open.
-  if (!isPublicSignUpOpen() && (
-    authPath.startsWith("sign-up") ||
-    authPath === "sign-in/social"
-  )) {
+  if (authPath.startsWith("sign-up") && !isPublicSignUpOpen()) {
     return privateBetaOnly();
+  }
+
+  if (authPath === "sign-in/social" && !isSocialAuthEnabled()) {
+    return socialUnavailable();
   }
 
   return getAuth().handler().POST(request, context);
