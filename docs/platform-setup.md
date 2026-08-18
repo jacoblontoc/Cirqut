@@ -91,9 +91,7 @@ The reviewed migration was verified on temporary branch `mcp-migration-2026-08-1
 
 The same reviewed migration was then applied to the persistent `vercel-dev` branch with explicit approval. Validation there confirms the same eight public application tables, twenty-two total public indexes, and three public foreign keys. Local readiness and the Auth session endpoint return `200`; waitlist and contact submissions return `202`. The synthetic validation rows were deleted and verified absent.
 
-The additive invite migrations `0001` and `0002` are also applied to `vercel-dev`. Validation confirms both invite columns, the one-use hash index, and all three matching Drizzle history rows. The first email-bound development key is pending; `main` was not changed.
-
-The additive onboarding migration `0003` adds lightweight profile context and completion state. It was generated and reviewed locally but has not been applied to `vercel-dev` or `main`.
+The additive invite migrations `0001` and `0002` and onboarding migration `0003` are applied to `main`, `vercel-dev`, and the current release Preview branch. Validation confirms both invite columns, the one-use hash index, all five onboarding columns, and all four matching Drizzle history rows on each branch. Neon `main` was preserved first as `backup/pre-private-beta-main-2026-08-18` (`br-plain-moon-aflimgay`).
 
 The first hosted Git deployment reached Vercel `READY` at `https://cirqut.vercel.app`. Production health, readiness, Auth session routing, waitlist persistence, and contact persistence passed; synthetic production validation rows were deleted and verified absent. Desktop and mobile remote QA passed without console errors, failed assets, or horizontal overflow. A separate Preview deployment reached `READY` with its isolated Neon database and the shared non-production Auth fallback; health reports both services configured, readiness is `ready`, and an unauthenticated session returns `null`.
 

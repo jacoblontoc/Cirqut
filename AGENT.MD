@@ -177,9 +177,7 @@ The explicit Vercel decision replaced the earlier vinext/Cloudflare runtime. Do 
 - `db/index.ts` — Neon HTTP/Drizzle client factory.
 - `db/schema.ts` — public intake, user profiles, organizations, memberships, beta access grants, entitlements, and audit events. No PCB-product tables.
 - `drizzle.config.ts` — PostgreSQL migration configuration.
-- `drizzle/0000_foundation.sql` — reviewed foundation migration; validated on a temporary branch and applied with explicit approval to Neon `main` and `vercel-dev`.
-- `drizzle/0001_invite-access.sql` and `drizzle/0002_foundation.sql` — additive invite-key and referrer-attribution migrations; applied to `vercel-dev` only.
-- `drizzle/0003_foundation.sql` — additive private-beta onboarding profile fields; generated and reviewed locally, not applied remotely.
+- `drizzle/0000_foundation.sql` through `drizzle/0003_foundation.sql` — reviewed foundation, invite-key, referrer-attribution, and private-beta onboarding migrations; applied to Neon `main`, `vercel-dev`, and the current release Preview branch.
 - `lib/invite-keys.ts` — cryptographically secure key generation, validation, and SHA-256 hashing.
 - `scripts/create-invite.ts` — operator-only, email-bound key issuance; prints plaintext once and stores only its hash.
 - `drizzle-legacy-unapplied-workos/` — preserved superseded migration artifacts; never apply them.
@@ -298,7 +296,7 @@ Neon Postgres is the system of record.
 - Back up or preserve a branch before destructive schema work.
 - Product authorization must be organization-scoped before product tables are introduced.
 
-Current external state: the public GitHub repository `jacoblontoc/Cirqut` is connected to the native-Next.js `cirqut` Vercel project, where `cirqut.org` and `www.cirqut.org` are verified. Neon project `cirqut` is `jolly-river-00297237`; `vercel-dev` is `br-green-art-af19lvhm`, and `main` is `br-polished-sunset-afkm35lq`. The reviewed foundation schema is on both branches, while invite migrations `0001` and `0002` are verified only on `vercel-dev`; onboarding migration `0003` is local-only, and `main` remains unchanged. Managed Better Auth is provisioned, and Preview uses the shared non-production `vercel-dev` Auth endpoint as a fallback while application databases remain branch-isolated. The unrelated `ecoguard-postgresql` project must remain untouched.
+Current external state: the public GitHub repository `jacoblontoc/Cirqut` is connected to the native-Next.js `cirqut` Vercel project, where `cirqut.org` and `www.cirqut.org` are verified. Neon project `cirqut` is `jolly-river-00297237`; `vercel-dev` is `br-green-art-af19lvhm`, and `main` is `br-polished-sunset-afkm35lq`. Migrations `0000` through `0003` and their matching Drizzle history are verified on `main`, `vercel-dev`, and the current release Preview branch. Managed Better Auth is provisioned, and Preview uses the shared non-production `vercel-dev` Auth endpoint as a fallback while application databases remain branch-isolated. The unrelated `ecoguard-postgresql` project must remain untouched.
 
 ## 13. Model and AI boundary
 
