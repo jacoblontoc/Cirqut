@@ -25,6 +25,10 @@ export default async function LoginPage({
   const params = await searchParams;
   const requestedView = typeof params.view === "string" ? params.view : "login";
   const view = authViews.has(requestedView as AuthView) ? requestedView as AuthView : "login";
+  const requestedReturnTo = typeof params.returnTo === "string" ? params.returnTo : "";
+  const returnTo = requestedReturnTo.startsWith("/invite/") && !requestedReturnTo.startsWith("//")
+    ? requestedReturnTo
+    : "/waitlist";
 
   if (view === "signup" && !isPublicSignUpOpen()) redirect("/waitlist");
 
@@ -44,6 +48,7 @@ export default async function LoginPage({
       initialEmail={typeof params.email === "string" ? params.email : ""}
       initialStatus={initialStatus}
       initialError={params.auth === "error" || params.setup === "required"}
+      returnTo={returnTo}
       token={typeof params.token === "string" ? params.token : ""}
     />
   );

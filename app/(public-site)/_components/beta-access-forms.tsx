@@ -13,6 +13,49 @@ import {
 
 const initialState: AccountActionState = { ok: false, message: "" };
 
+export function DashboardGateExit() {
+  const router = useRouter();
+
+  useEffect(() => {
+    document.body.dataset.authGateTarget = "dashboard";
+    document.body.dataset.authGate = "exiting";
+    const delay = window.matchMedia("(prefers-reduced-motion: reduce)").matches ? 0 : 760;
+    const timer = window.setTimeout(() => router.replace("/dashboard"), delay);
+
+    return () => {
+      window.clearTimeout(timer);
+      delete document.body.dataset.authGate;
+      delete document.body.dataset.authGateTarget;
+    };
+  }, [router]);
+
+  return null;
+}
+
+export function OnboardingBackButton() {
+  const router = useRouter();
+  const [pending, setPending] = useState(false);
+
+  async function leaveOnboarding() {
+    setPending(true);
+    const { error } = await authClient.signOut();
+
+    if (error) {
+      setPending(false);
+      return;
+    }
+
+    router.replace("/");
+    router.refresh();
+  }
+
+  return (
+    <button className="auth-gate__back" type="button" data-auth-gate-back disabled={pending} onClick={leaveOnboarding}>
+      <span aria-hidden="true">←</span> {pending ? "Signing out…" : "Back"}
+    </button>
+  );
+}
+
 export function BetaAccessForms({
   accessActive,
   databaseReady,
@@ -31,6 +74,7 @@ export function BetaAccessForms({
   const [onboardingState, onboardingAction, onboardingPending] = useActionState(saveOnboarding, initialState);
   const [updatesState, updatesAction, updatesPending] = useActionState(saveProductUpdates, initialState);
   const [signOutPending, setSignOutPending] = useState(false);
+  const needsOnboarding = databaseReady && accessActive && !onboardingComplete;
 
   useEffect(() => {
     if (inviteState.ok || onboardingState.ok) router.refresh();
@@ -44,7 +88,7 @@ export function BetaAccessForms({
 
   return (
     <div className="beta-access-forms">
-      <div className="beta-account-meta"><span>Signed in as</span><strong>{email}</strong></div>
+      {!needsOnboarding && <div className="beta-account-meta"><span>Signed in as</span><strong>{email}</strong></div>}
 
       {databaseReady && !accessActive && (
         <form className="auth-form beta-access-form" action={inviteAction}>
@@ -67,8 +111,24 @@ export function BetaAccessForms({
         </form>
       )}
 
-      {databaseReady && accessActive && !onboardingComplete && (
+      {needsOnboarding && (
         <form className="auth-form beta-onboarding-form" action={onboardingAction}>
+          <label>
+            <span>Choose your username</span>
+            <input
+              name="username"
+              type="text"
+              autoComplete="username"
+              autoCapitalize="none"
+              spellCheck={false}
+              minLength={3}
+              maxLength={24}
+              pattern="[a-z0-9_]{3,24}"
+              placeholder="@username"
+              required
+            />
+            <small>3–24 letters, numbers, or underscores. You can change this later.</small>
+          </label>
           <fieldset>
             <legend>What best describes you?</legend>
             <div className="beta-choice-grid">
@@ -131,9 +191,9 @@ export function BetaAccessForms({
         <p className="auth-status auth-status--error" role="alert">Account preferences are temporarily unavailable.</p>
       ) : null}
 
-      <button className="button button--light button--full beta-signout" type="button" disabled={signOutPending} onClick={signOut}>
+      {!needsOnboarding && <button className="button button--light button--full beta-signout" type="button" disabled={signOutPending} onClick={signOut}>
         {signOutPending ? "Signing out…" : "Sign out"}
-      </button>
+      </button>}
     </div>
   );
 }

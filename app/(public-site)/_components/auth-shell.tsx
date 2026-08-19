@@ -16,6 +16,7 @@ type AuthShellProps = {
   initialEmail?: string;
   initialStatus?: string;
   initialError?: boolean;
+  returnTo?: string;
   token?: string;
 };
 
@@ -33,6 +34,7 @@ export function AuthShell({
   initialEmail = "",
   initialStatus = "",
   initialError = false,
+  returnTo = "/waitlist",
   token = "",
 }: AuthShellProps) {
   const router = useRouter();
@@ -70,7 +72,7 @@ export function AuthShell({
       return;
     }
 
-    router.push("/waitlist");
+    router.push(returnTo);
     router.refresh();
   }
 
@@ -90,7 +92,7 @@ export function AuthShell({
       name: String(form.get("name") ?? "").trim(),
       email,
       password,
-      callbackURL: "/waitlist",
+      callbackURL: returnTo,
     });
 
     if (error) {
@@ -98,7 +100,7 @@ export function AuthShell({
       return;
     }
 
-    router.push(`/login?view=verify-email&email=${encodeURIComponent(email)}`);
+    router.push(`/login?view=verify-email&email=${encodeURIComponent(email)}&returnTo=${encodeURIComponent(returnTo)}`);
   }
 
   async function handleVerify(event: FormEvent<HTMLFormElement>) {
@@ -135,7 +137,7 @@ export function AuthShell({
       return;
     }
 
-    router.push("/waitlist");
+    router.push(returnTo);
     router.refresh();
   }
 
@@ -189,8 +191,8 @@ export function AuthShell({
 
     const { error } = await authClient.signIn.social({
       provider,
-      callbackURL: "/waitlist",
-      errorCallbackURL: `/login?view=${view}&auth=error`,
+      callbackURL: returnTo,
+      errorCallbackURL: `/login?view=${view}&auth=error&returnTo=${encodeURIComponent(returnTo)}`,
     });
 
     if (error) {
@@ -214,6 +216,9 @@ export function AuthShell({
 
   const heading = copy[view];
   const showProviders = view === "login" || (view === "signup" && !signupEmailOpen);
+  const returnToQuery = returnTo === "/waitlist" ? "" : `&returnTo=${encodeURIComponent(returnTo)}`;
+  const loginHref = returnTo === "/waitlist" ? "/login" : `/login?returnTo=${encodeURIComponent(returnTo)}`;
+  const signupHref = `/login?view=signup${returnToQuery}`;
 
   return (
     <AuthGateShell variant="login">
@@ -242,6 +247,7 @@ export function AuthShell({
             </div>
             {!socialEnabled && <p className="auth-method-note">Social sign-in is not available in this environment.</p>}
             {view === "signup" && <p className="auth-method-note">By continuing, you agree to the <Link href="/terms">terms</Link> and acknowledge the <Link href="/privacy">privacy notice</Link>.</p>}
+            {view === "signup" && <p className="auth-switch">Already have an account? <Link href={loginHref}>Log in</Link></p>}
             {view === "login" && <div className="auth-divider"><span>or continue with email</span></div>}
           </>
         )}
@@ -252,7 +258,7 @@ export function AuthShell({
             <label><span>Password</span><input name="password" type="password" autoComplete="current-password" placeholder="Enter your password" minLength={8} required /></label>
             <div className="auth-form-options"><Link href="/login?view=verify-email">Verify email</Link><Link href="/login?view=forgot-password">Forgot password?</Link></div>
             <button className="button button--dark button--large button--full auth-submit" type="submit" disabled={pending}>{pending ? "Logging in…" : "Log in"}<span aria-hidden="true">→</span></button>
-            <p className="auth-switch">New to Cirqut? <Link href="/login?view=signup">Create account</Link></p>
+            <p className="auth-switch">New to Cirqut? <Link href={signupHref}>Create account</Link></p>
           </form>
         )}
 
@@ -265,7 +271,7 @@ export function AuthShell({
             <label><span>Confirm password</span><input name="confirmPassword" type="password" autoComplete="new-password" placeholder="Repeat your password" minLength={8} required /></label>
             <label className="auth-checkbox auth-checkbox-terms"><input name="terms" type="checkbox" required /><span>I agree to the <Link href="/terms">terms</Link> and acknowledge the <Link href="/privacy">privacy notice</Link>.</span></label>
             <button className="button button--dark button--large button--full auth-submit" type="submit" disabled={pending}>{pending ? "Creating account…" : "Create account"}<span aria-hidden="true">→</span></button>
-            <p className="auth-switch">Already have an account? <Link href="/login">Log in</Link></p>
+            <p className="auth-switch">Already have an account? <Link href={loginHref}>Log in</Link></p>
           </form>
         )}
 
