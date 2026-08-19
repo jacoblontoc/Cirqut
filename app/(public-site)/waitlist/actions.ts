@@ -14,6 +14,15 @@ const personas = new Set<string>(["hobbyist", "student", "engineer", "founder", 
 const experienceLevels = new Set<string>(["new", "some", "experienced", "expert"]);
 const pcbTools = new Set<string>(["kicad", "altium", "flux", "none"]);
 const cirqutGoals = new Set<string>(["research", "requirements", "component-selection", "schematic-preparation", "documentation"]);
+const usernamePattern = /^[a-z0-9_]{3,24}$/;
+
+function normalizeUsername(value: FormDataEntryValue | null) {
+  return String(value ?? "").trim().toLowerCase().replace(/^@/, "");
+}
+
+function isUniqueViolation(error: unknown) {
+  return typeof error === "object" && error !== null && "code" in error && error.code === "23505";
+}
 
 async function getVerifiedUser() {
   if (!isAuthConfigured()) return null;
@@ -97,12 +106,16 @@ export async function saveOnboarding(
   const user = await getVerifiedUser();
   const persona = String(formData.get("persona") ?? "");
   const pcbExperience = String(formData.get("pcbExperience") ?? "");
+  const username = normalizeUsername(formData.get("username"));
   const tools = [...new Set(formData.getAll("tools").map(String))];
   const goals = [...new Set(formData.getAll("goals").map(String))];
 
+  if (!user) return { ok: false, message: "Sign in again to finish onboarding." };
+  if (!usernamePattern.test(username)) {
+    return { ok: false, message: "Choose a username with 3–24 lowercase letters, numbers, or underscores." };
+  }
   if (
-    !user
-    || !personas.has(persona)
+    !personas.has(persona)
     || !experienceLevels.has(pcbExperience)
     || tools.length === 0
     || tools.some((tool) => !pcbTools.has(tool))
@@ -135,6 +148,7 @@ export async function saveOnboarding(
       authUserId: user.id,
       email: user.email,
       displayName: user.name,
+      username,
       persona,
       pcbExperience,
       pcbTools: tools,
@@ -145,6 +159,7 @@ export async function saveOnboarding(
       set: {
         email: user.email,
         displayName: user.name,
+        username,
         persona,
         pcbExperience,
         pcbTools: tools,
@@ -157,10 +172,44 @@ export async function saveOnboarding(
     revalidatePath("/waitlist");
     return { ok: true, message: "Onboarding complete." };
   } catch (error) {
+    if (isUniqueViolation(error)) return { ok: false, message: "That username is already taken." };
     console.error("onboarding_save_failed", {
       name: error instanceof Error ? error.name : "UnknownError",
     });
     return { ok: false, message: "Onboarding is temporarily unavailable. Try again shortly." };
+  }
+}
+
+export async function saveAccountUsername(
+  _state: AccountActionState,
+  formData: FormData,
+): Promise<AccountActionState> {
+  const user = await getVerifiedUser();
+  const username = normalizeUsername(formData.get("username"));
+
+  if (!user) return { ok: false, message: "Sign in again to update your username." };
+  if (!usernamePattern.test(username)) {
+    return { ok: false, message: "Use 3–24 lowercase letters, numbers, or underscores." };
+  }
+  if (!isDatabaseConfigured()) {
+    return { ok: false, message: "Account settings are temporarily unavailable." };
+  }
+
+  try {
+    const updated = await getDb().update(userProfiles)
+      .set({ username, updatedAt: new Date() })
+      .where(eq(userProfiles.authUserId, user.id))
+      .returning({ id: userProfiles.id });
+
+    if (updated.length === 0) return { ok: false, message: "Complete onboarding before choosing a username." };
+    revalidatePath("/dashboard");
+    return { ok: true, message: "Username updated." };
+  } catch (error) {
+    if (isUniqueViolation(error)) return { ok: false, message: "That username is already taken." };
+    console.error("account_username_update_failed", {
+      name: error instanceof Error ? error.name : "UnknownError",
+    });
+    return { ok: false, message: "Account settings are temporarily unavailable." };
   }
 }
 

@@ -44,6 +44,8 @@ h1, h2, h3 { font-family: var(--font-stack-headline); }
   pointer-events: none;
 }
 
+body[data-auth-gate-target="dashboard"] .auth-route-backdrop { display: none; }
+
 .auth-route-backdrop__page {
   position: absolute;
   inset: 0;

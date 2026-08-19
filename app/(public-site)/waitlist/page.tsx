@@ -5,7 +5,8 @@ import { redirect } from "next/navigation";
 import { getDb, isDatabaseConfigured } from "@/db";
 import { accessGrants, userProfiles, waitlistEntries } from "@/db/schema";
 import { getAuth, isAuthConfigured } from "@/lib/auth/server";
-import { BetaAccessForms } from "../_components/beta-access-forms";
+import { DashboardShell } from "@/app/dashboard/dashboard-shell";
+import { BetaAccessForms, DashboardGateExit, OnboardingBackButton } from "../_components/beta-access-forms";
 import { AuthGateShell } from "../_components/public-shells";
 import { WaitlistForm } from "../_components/waitlist-form";
 
@@ -53,6 +54,7 @@ export default async function WaitlistPage() {
   let accessActive = false;
   let onboardingComplete = false;
   let productUpdatesConsent = false;
+  let username = "";
   let databaseReady = isDatabaseConfigured();
 
   if (databaseReady) {
@@ -68,7 +70,10 @@ export default async function WaitlistPage() {
             or(isNull(accessGrants.expiresAt), gt(accessGrants.expiresAt, now)),
           ))
           .limit(1),
-        db.select({ onboardingCompletedAt: userProfiles.onboardingCompletedAt })
+        db.select({
+          onboardingCompletedAt: userProfiles.onboardingCompletedAt,
+          username: userProfiles.username,
+        })
           .from(userProfiles)
           .where(eq(userProfiles.authUserId, user.id))
           .limit(1),
@@ -81,30 +86,49 @@ export default async function WaitlistPage() {
       accessActive = Boolean(grant);
       onboardingComplete = Boolean(profile?.onboardingCompletedAt);
       productUpdatesConsent = preference?.productUpdatesConsent ?? false;
+      username = profile?.username ?? "";
     } catch {
       databaseReady = false;
     }
   }
 
+  if (databaseReady && accessActive && onboardingComplete) {
+    return (
+      <>
+        <div aria-hidden="true" inert>
+          <DashboardShell
+            activeWorkspace={null}
+            avatarUrl={user.image}
+            avatarSeed={user.id}
+            displayName={user.name || email}
+            email={email}
+            memberCount={0}
+            productUpdatesConsent={productUpdatesConsent}
+            username={username}
+            workspaces={[]}
+          ><span /></DashboardShell>
+        </div>
+        <AuthGateShell variant="waitlist" back={false}><DashboardGateExit /></AuthGateShell>
+      </>
+    );
+  }
+
+  const needsOnboarding = databaseReady && accessActive && !onboardingComplete;
   const title = !databaseReady
     ? "Finish joining the private beta."
-    : accessActive
-      ? onboardingComplete ? "You’re in." : "A few quick questions."
-      : "Enter your invite key.";
+    : "Enter your invite key.";
   const description = !databaseReady
     ? "Your account is verified, but beta access is temporarily unavailable."
-    : accessActive
-      ? onboardingComplete ? "Your private-beta access is active." : "Help Cirqut fit how you work."
-      : "Your account is verified. An invite key is still required for beta access.";
+    : "Your account is verified. An invite key is still required for beta access.";
 
   return (
-    <AuthGateShell variant="waitlist">
-      <section className="auth-card waitlist-card" aria-labelledby="waitlist-form-title">
-        <div className="auth-card-heading">
+    <AuthGateShell variant="waitlist" back={needsOnboarding ? <OnboardingBackButton /> : undefined}>
+      <section className="auth-card waitlist-card" {...(needsOnboarding ? { "aria-label": "Onboarding questions" } : { "aria-labelledby": "waitlist-form-title" })}>
+        {!needsOnboarding && <div className="auth-card-heading">
           <p>Private beta</p>
           <h1 id="waitlist-form-title">{title}</h1>
           <span>{description}</span>
-        </div>
+        </div>}
         <BetaAccessForms
           accessActive={accessActive}
           databaseReady={databaseReady}

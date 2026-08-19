@@ -40,6 +40,13 @@ export const entitlementStatus = pgEnum("entitlement_status", [
   "canceled",
 ]);
 
+export const workspaceInvitationStatus = pgEnum("workspace_invitation_status", [
+  "pending",
+  "accepted",
+  "revoked",
+  "expired",
+]);
+
 // Managed Better Auth owns users and sessions in the neon_auth schema.
 // This table stores only Cirqut-specific profile and authorization metadata.
 export const userProfiles = pgTable("user_profiles", {
@@ -47,6 +54,7 @@ export const userProfiles = pgTable("user_profiles", {
   authUserId: text("auth_user_id").notNull(),
   email: text("email").notNull(),
   displayName: text("display_name"),
+  username: text("username"),
   persona: text("persona"),
   pcbExperience: text("pcb_experience"),
   pcbTools: jsonb("pcb_tools").$type<string[]>(),
@@ -56,6 +64,7 @@ export const userProfiles = pgTable("user_profiles", {
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
 }, (table) => [
   uniqueIndex("user_profiles_auth_user_id_unique").on(table.authUserId),
+  uniqueIndex("user_profiles_username_unique").on(table.username),
   index("user_profiles_email_idx").on(table.email),
 ]);
 
@@ -68,6 +77,7 @@ export const organizations = pgTable("organizations", {
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
 }, (table) => [
   uniqueIndex("organizations_slug_unique").on(table.slug),
+  uniqueIndex("organizations_created_by_unique").on(table.createdByAuthUserId),
 ]);
 
 export const organizationMemberships = pgTable("organization_memberships", {
@@ -85,6 +95,61 @@ export const organizationMemberships = pgTable("organization_memberships", {
     table.authUserId,
   ),
   index("organization_memberships_auth_user_idx").on(table.authUserId),
+]);
+
+export const projects = pgTable("projects", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  organizationId: uuid("organization_id")
+    .notNull()
+    .references(() => organizations.id, { onDelete: "cascade" }),
+  name: text("name").notNull(),
+  description: text("description"),
+  createdByAuthUserId: text("created_by_auth_user_id").notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+}, (table) => [
+  index("projects_organization_updated_idx").on(table.organizationId, table.updatedAt),
+  index("projects_creator_idx").on(table.createdByAuthUserId),
+]);
+
+export const boards = pgTable("boards", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  projectId: uuid("project_id")
+    .notNull()
+    .references(() => projects.id, { onDelete: "cascade" }),
+  name: text("name").notNull(),
+  purpose: text("purpose"),
+  description: text("description"),
+  status: text("status").notNull().default("not_started"),
+  createdByAuthUserId: text("created_by_auth_user_id").notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+}, (table) => [
+  index("boards_project_updated_idx").on(table.projectId, table.updatedAt),
+  index("boards_creator_idx").on(table.createdByAuthUserId),
+]);
+
+export const workspaceInvitations = pgTable("workspace_invitations", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  organizationId: uuid("organization_id")
+    .notNull()
+    .references(() => organizations.id, { onDelete: "cascade" }),
+  email: text("email").notNull(),
+  role: membershipRole("role").notNull().default("member"),
+  tokenHash: text("token_hash").notNull(),
+  status: workspaceInvitationStatus("status").notNull().default("pending"),
+  invitedByAuthUserId: text("invited_by_auth_user_id").notNull(),
+  acceptedByAuthUserId: text("accepted_by_auth_user_id"),
+  expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+  acceptedAt: timestamp("accepted_at", { withTimezone: true }),
+  revokedAt: timestamp("revoked_at", { withTimezone: true }),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+}, (table) => [
+  uniqueIndex("workspace_invitations_token_hash_unique").on(table.tokenHash),
+  uniqueIndex("workspace_invitations_org_email_unique").on(table.organizationId, table.email),
+  index("workspace_invitations_org_status_idx").on(table.organizationId, table.status),
+  index("workspace_invitations_email_idx").on(table.email),
 ]);
 
 export const waitlistEntries = pgTable("waitlist_entries", {

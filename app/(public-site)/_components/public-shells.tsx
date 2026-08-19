@@ -15,13 +15,13 @@ export function BrandMark({ context }: BrandMarkProps) {
   );
 }
 
-export function AuthGateShell({ children, variant }: { children: ReactNode; variant: "login" | "waitlist" }) {
+export function AuthGateShell({ children, variant, back }: { children: ReactNode; variant: "login" | "waitlist"; back?: ReactNode | false }) {
   return (
     <main className={`auth-page auth-gate auth-gate--${variant}`}>
       <section className="auth-gate__form-pane">
-        <Link className="auth-gate__back" href="/" data-auth-gate-back>
+        {back === false ? null : back ?? <Link className="auth-gate__back" href="/" data-auth-gate-back>
           <span aria-hidden="true">←</span> Back
-        </Link>
+        </Link>}
         <div className="auth-gate__content">{children}</div>
       </section>
 

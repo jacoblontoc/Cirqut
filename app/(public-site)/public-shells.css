@@ -509,6 +509,12 @@
 
 .beta-onboarding-form { gap: 24px; }
 
+.beta-onboarding-form > label small {
+  color: var(--auth-muted);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
 .beta-onboarding-form fieldset {
   display: grid;
   gap: 10px;
@@ -623,10 +629,14 @@
   align-items: center;
   gap: 8px;
   min-height: 44px;
+  padding: 0;
+  border: 0;
   color: var(--auth-muted);
+  background: transparent;
   font-size: 14px;
   font-weight: 600;
   text-decoration: none;
+  cursor: pointer;
 }
 
 .auth-gate__back:hover { color: var(--auth-ink); }
@@ -660,13 +670,9 @@
   grid-row: 1;
   min-width: 0;
   height: 100svh;
-  margin-left: -1px;
   overflow: hidden;
-  border-left: 1px solid var(--auth-line);
   border-radius: var(--auth-gate-bezel) 0 0 0;
-  background:
-    radial-gradient(circle at 58% 38%, rgba(255, 255, 255, 0.9), transparent 28rem),
-    linear-gradient(145deg, #ebeae5, #d9ddd8);
+  background: #f4f4f0;
 }
 
 .auth-gate .auth-card {
